@@ -50,7 +50,6 @@ NE_OPUS_URLS=(
   "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-ne.txt.zip"
 )
 
-# TODO: Reenable "$KH_ROOT/JW300.en-ne"
 # TODO: We also want to use train.alt from http://lotus.kuee.kyoto-u.ac.jp/WAT/km-en-data/
 KH_OPUS_DATASETS=(
   "$KH_ROOT/GNOME.en-ne"
@@ -58,7 +57,6 @@ KH_OPUS_DATASETS=(
   "$KH_ROOT/KDE4.en-ne"  
 )
 
-# TODO: Also use JW300, but there doesn't seem to be a moses version available  
 # TODO: We also want to use train.alt from http://lotus.kuee.kyoto-u.ac.jp/WAT/km-en-data/
 KH_OPUS_URLS=(
   "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-kh.txt.zip"
