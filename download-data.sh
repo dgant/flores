@@ -96,10 +96,10 @@ download_opus_data() {
   if [ "$TGT" = "si" ]; then
     URLS=("${SI_OPUS_URLS[@]}")
     DATASETS=("${SI_OPUS_DATASETS[@]}")
-  else if [ "$TGT" = "ne" ]; then
+  elif [ "$TGT" = "ne" ]; then
     URLS=("${NE_OPUS_URLS[@]}")
     DATASETS=("${NE_OPUS_DATASETS[@]}")
-  else if [ "$TGT" = "kh" ]; then
+  elif [ "$TGT" = "kh" ]; then
     URLS=("${KH_OPUS_URLS[@]}")
     DATASETS=("${KH_OPUS_DATASETS[@]}")
   else
