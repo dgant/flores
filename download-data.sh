@@ -13,14 +13,16 @@ set -o pipefail
 SRC=en
 SI_TGT=si
 NE_TGT=ne
+KH_TGT=kh
 
 ROOT=$(dirname "$0")
 DATA=$ROOT/data
 NE_ROOT=$DATA/all-clean-ne
 SI_ROOT=$DATA/all-clean-si
 HI_ROOT=$DATA/all-clean-hi
+KH_ROOT=$DATA/all-clean-kh
 
-mkdir -p $DATA $NE_ROOT $SI_ROOT $HI_ROOT
+mkdir -p $DATA $NE_ROOT $SI_ROOT $HI_ROOT $KH_ROOT
 
 SI_OPUS_DATASETS=(
   "$SI_ROOT/GNOME.en-si"
@@ -46,6 +48,22 @@ NE_OPUS_URLS=(
   "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-ne.txt.zip"
   "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-ne.txt.zip"
   "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-ne.txt.zip"
+)
+
+KH_OPUS_DATASETS=(
+  "$KH_ROOT/GNOME.en-ne"
+  "$KH_ROOT/Ubuntu.en-ne"
+  "$KH_ROOT/KDE4.en-ne"
+  # TODO: Reenable "$KH_ROOT/JW300.en-ne"
+  # TODO: We also want to use train.alt from http://lotus.kuee.kyoto-u.ac.jp/WAT/km-en-data/
+)
+
+KH_OPUS_URLS=(
+  "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-kh.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-kh.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-kh.txt.zip"
+  # TODO: Also use JW300, but there doesn't seem to be a moses version available  
+  # TODO: We also want to use train.alt from http://lotus.kuee.kyoto-u.ac.jp/WAT/km-en-data/
 )
 
 REMOVE_FILE_PATHS=()
@@ -78,9 +96,12 @@ download_opus_data() {
   if [ "$TGT" = "si" ]; then
     URLS=("${SI_OPUS_URLS[@]}")
     DATASETS=("${SI_OPUS_DATASETS[@]}")
-  else
+  else if [ "$TGT" = "ne" ]; then
     URLS=("${NE_OPUS_URLS[@]}")
     DATASETS=("${NE_OPUS_DATASETS[@]}")
+  else if [ "$TGT" = "kh" ]; then
+    URLS=("${KH_OPUS_URLS[@]}")
+    DATASETS=("${KH_OPUS_DATASETS[@]}")
   fi
 
   # Download and extract data
@@ -107,6 +128,8 @@ REMOVE_FILE_PATHS+=( ${SI_OPUS_DATASETS[3]}.$SRC ${SI_OPUS_DATASETS[3]}.$SI_TGT 
 
 download_opus_data $NE_ROOT $NE_TGT
 
+download_opus_data $KH_ROOT $KH_TGT
+#TODO: Are there any additional steps required like with SI?
 
 # Download and extract Global Voices data
 GLOBAL_VOICES="$NE_ROOT/globalvoices.2018q4.ne-en"
