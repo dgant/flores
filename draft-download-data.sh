@@ -11,39 +11,69 @@ set -e
 set -o pipefail
 
 SRC=en
-KH_TGT=kh
+KM_TGT=km
 
 ROOT=$(dirname "$0")
 DATA=$ROOT/data
-KH_ROOT=$DATA/all-clean-kh
-
-mkdir -p $DATA $$KH_ROOT
+KM_ROOT=$DATA/all-clean-km
+mkdir -p $DATA $KM_ROOT
 
 # TODO: We also want to use train.alt from http://lotus.kuee.kyoto-u.ac.jp/WAT/km-en-data/
-KH_OPUS_DATASETS=(
-  "$KH_ROOT/GNOME.en-ne"
-  "$KH_ROOT/Ubuntu.en-ne"
-  "$KH_ROOT/KDE4.en-ne"  
+KM_OPUS_DATASETS=(
+  "$KM_ROOT/GNOME.en-km"
+  "$KM_ROOT/GNOME.en-km"
+  "$KM_ROOT/KDE4.en-km"
+  "$KM_ROOT/KDE4.en-km"
+  "$KM_ROOT/Ubuntu.en-km"
+  "$KM_ROOT/Ubuntu.en-km"  
 )
 
 # TODO: We also want to use train.alt from http://lotus.kuee.kyoto-u.ac.jp/WAT/km-en-data/
-KH_OPUS_URLS=(
-  "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-kh.txt.zip"
-  "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-kh.txt.zip"
-  "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-kh.txt.zip"
+KM_OPUS_URLS=(
+  "https://object.pouta.csc.fi/OPUS-GNOME/v1/raw/en.zip"
+  "https://object.pouta.csc.fi/OPUS-GNOME/v1/raw/km.zip"
+  "https://object.pouta.csc.fi/OPUS-KDE4/v2/raw/en.zip"
+  "https://object.pouta.csc.fi/OPUS-KDE4/v2/raw/km.zip"
+  "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/raw/en.zip"
+  "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/raw/km.zip"
+  #"https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-km.txt.zip"
+  #"https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-km.txt.zip"
+  #"https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-km.txt.zip"
 )
 
 REMOVE_FILE_PATHS=()
+
+# Download data
+download_data() {
+  CORPORA=$1
+  URL=$2
+
+  if [ -f $CORPORA ]; then
+    echo "$CORPORA already exists, skipping download"
+  else
+    echo "Downloading $URL"
+    wget $URL -O $CORPORA --no-check-certificate || rm -f $CORPORA
+    if [ -f $CORPORA ]; then
+      echo "$URL successfully downloaded."
+    else
+      echo "$URL not successfully downloaded."
+      rm -f $CORPORA
+      exit -1
+    fi
+  fi
+}
 
 # Example: download_opus_data $LANG_ROOT $TGT
 download_opus_data() {
   LANG_ROOT=$1
   TGT=$2
+  echo "Downloading OPUS data for language $LANG_ROOT to target $TGT"
 
-  if [ "$TGT" = "kh" ]; then
-    URLS=("${KH_OPUS_URLS[@]}")
-    DATASETS=("${KH_OPUS_DATASETS[@]}")
+  if [ "$TGT" = "km" ]; then
+    URLS=("${KM_OPUS_URLS[@]}")
+    DATASETS=("${KM_OPUS_DATASETS[@]}")
   else
+    echo "Warning: Target $TGT not recognized"
     URLS=()
     DATASETS=()
   fi
@@ -65,7 +95,7 @@ download_opus_data() {
   REMOVE_FILE_PATHS+=( ${DATASETS[0]}.$TGT ${DATASETS[1]}.$TGT ${DATASETS[2]}.$TGT )
 }
 
-download_opus_data $KH_ROOT $KH_TGT
+download_opus_data $KM_ROOT $KM_TGT
 
 # Remove the temporary files
 for ((i=0;i<${#REMOVE_FILE_PATHS[@]};++i)); do
