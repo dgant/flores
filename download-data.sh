@@ -58,12 +58,16 @@ KM_OPUS_DATASETS=(
   "$KM_ROOT/GNOME.en-km"
   "$KM_ROOT/Ubuntu.en-km"
   "$KM_ROOT/KDE4.en-km"
+  "$KM_ROOT/GlobalVoices.en-km"
+  "$KM_ROOT/Tatoeba.en-km"  
 )
 
 KM_OPUS_URLS=(
   "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-km.txt.zip"
   "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-km.txt.zip"
   "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-km.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-GlobalVoices/v2017q3/moses/en-km.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-Tatoeba/v20190709/moses/en-km.txt.zip"
 )
 
 REMOVE_FILE_PATHS=()
