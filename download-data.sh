@@ -13,14 +13,20 @@ set -o pipefail
 SRC=en
 SI_TGT=si
 NE_TGT=ne
+KM_TGT=km
 
 ROOT=$(dirname "$0")
 DATA=$ROOT/data
 NE_ROOT=$DATA/all-clean-ne
 SI_ROOT=$DATA/all-clean-si
 HI_ROOT=$DATA/all-clean-hi
+KM_ROOT=$DATA/all-clean-km
 
-mkdir -p $DATA $NE_ROOT $SI_ROOT $HI_ROOT
+mkdir -p $DATA \
+$NE_ROOT \
+$SI_ROOT \
+$HI_ROOT \
+$KM_ROOT
 
 SI_OPUS_DATASETS=(
   "$SI_ROOT/GNOME.en-si"
@@ -46,6 +52,18 @@ NE_OPUS_URLS=(
   "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-ne.txt.zip"
   "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-ne.txt.zip"
   "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-ne.txt.zip"
+)
+
+KM_OPUS_DATASETS=(
+  "$KM_ROOT/GNOME.en-km"
+  "$KM_ROOT/Ubuntu.en-km"
+  "$KM_ROOT/KDE4.en-km"
+)
+
+KM_OPUS_URLS=(
+  "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-km.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-km.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-km.txt.zip"
 )
 
 REMOVE_FILE_PATHS=()
@@ -78,9 +96,12 @@ download_opus_data() {
   if [ "$TGT" = "si" ]; then
     URLS=("${SI_OPUS_URLS[@]}")
     DATASETS=("${SI_OPUS_DATASETS[@]}")
-  else
+  elif [ "$TGT" = "ne" ]; then
     URLS=("${NE_OPUS_URLS[@]}")
     DATASETS=("${NE_OPUS_DATASETS[@]}")
+  else
+    URLS=("${KM_OPUS_URLS[@]}")
+    DATASETS=("${KM_OPUS_DATASETS[@]}")
   fi
 
   # Download and extract data
@@ -106,6 +127,7 @@ cp ${SI_OPUS_DATASETS[3]}.$SI_TGT $SI_ROOT/OpenSubtitles2018.$SRC-$SI_TGT.$SI_TG
 REMOVE_FILE_PATHS+=( ${SI_OPUS_DATASETS[3]}.$SRC ${SI_OPUS_DATASETS[3]}.$SI_TGT )
 
 download_opus_data $NE_ROOT $NE_TGT
+download_opus_data $KM_ROOT $KM_TGT
 
 
 # Download and extract Global Voices data
