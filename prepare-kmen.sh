@@ -37,8 +37,9 @@ ARCHIVES=(
 TRAIN_SETS=(
     "all-clean-km/GNOMEKDEUbuntu.en-km"
 )
-VALID_SET="wikipedia_en_ne_si_test_sets/wikipedia.dev.ne-en"
-TEST_SET="wikipedia_en_ne_si_test_sets/wikipedia.devtest.ne-en"
+#TODO: Store these inside the repo
+VALID_SET="~/flores_v2/km-en.dev"
+TEST_SET="~/flores_v2/km-en.devtest"
 
 if [ ! -d $DATA/all-clean-km ]; then
     echo "Data directory not found. Please run 'bash download-data.sh' first..."
@@ -85,11 +86,10 @@ for FILE in "${TRAIN_SETS[@]}"; do
 done > $TMP/train.$TGT
 
 echo "pre-processing dev/test data..."
-#TODO: Reenable once we get these
-#$SRC_TOKENIZER $DATA/${VALID_SET}.$SRC > $TMP/valid.$SRC
-#$TGT_TOKENIZER $DATA/${VALID_SET}.$TGT > $TMP/valid.$TGT
-#$SRC_TOKENIZER $DATA/${TEST_SET}.$SRC > $TMP/test.$SRC
-#$TGT_TOKENIZER $DATA/${TEST_SET}.$TGT > $TMP/test.$TGT
+$SRC_TOKENIZER $DATA/${VALID_SET}.$SRC > $TMP/valid.$SRC
+$TGT_TOKENIZER $DATA/${VALID_SET}.$TGT > $TMP/valid.$TGT
+$SRC_TOKENIZER $DATA/${TEST_SET}.$SRC > $TMP/test.$SRC
+$TGT_TOKENIZER $DATA/${TEST_SET}.$TGT > $TMP/test.$TGT
 
 # learn BPE with sentencepiece
 python $SPM_TRAIN \
@@ -106,13 +106,13 @@ python $SPM_ENCODE \
   --inputs $TMP/train.$SRC $TMP/train.$TGT \
   --outputs $TMP/train.bpe.$SRC $TMP/train.bpe.$TGT \
   --min-len $TRAIN_MINLEN --max-len $TRAIN_MAXLEN
-#for SPLIT in "valid" "test"; do \
-#  python $SPM_ENCODE \
-#    --model $DATABIN/sentencepiece.bpe.model \
-#    --output_format=piece \
-#    --inputs $TMP/$SPLIT.$SRC $TMP/$SPLIT.$TGT \
-#    --outputs $TMP/$SPLIT.bpe.$SRC $TMP/$SPLIT.bpe.$TGT
-#done
+for SPLIT in "valid" "test"; do \
+  python $SPM_ENCODE \
+    --model $DATABIN/sentencepiece.bpe.model \
+    --output_format=piece \
+    --inputs $TMP/$SPLIT.$SRC $TMP/$SPLIT.$TGT \
+    --outputs $TMP/$SPLIT.bpe.$SRC $TMP/$SPLIT.bpe.$TGT
+done
 
 # binarize data
 fairseq-preprocess \
@@ -121,6 +121,6 @@ fairseq-preprocess \
   --joined-dictionary \
   --workers 4 \
   --trainpref $TMP/train.bpe \
-  #--validpref $TMP/valid.bpe \
-  # --testpref $TMP/test.bpe
+  --validpref $TMP/valid.bpe \
+   --testpref $TMP/test.bpe
   
