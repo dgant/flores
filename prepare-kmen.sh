@@ -38,8 +38,8 @@ TRAIN_SETS=(
     "all-clean-km/GNOMEKDEUbuntu.en-km"
 )
 #TODO: Store these inside the repo
-VALID_SET="~/flores_v2/km-en.dev"
-TEST_SET="~/flores_v2/km-en.devtest"
+VALID_SET="../../flores_v2/km-en.dev"
+TEST_SET="../../flores_v2/km-en.devtest"
 
 if [ ! -d $DATA/all-clean-km ]; then
     echo "Data directory not found. Please run 'bash download-data.sh' first..."
