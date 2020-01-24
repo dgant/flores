@@ -6,8 +6,8 @@
 #
 #!/bin/bash
 
-SRC=ps
-TGT=en
+SRC=en
+TGT=ps
 
 BPESIZE=5000
 TRAIN_MINLEN=1  # remove sentences with <1 BPE token
