@@ -14,6 +14,7 @@ SRC=en
 SI_TGT=si
 NE_TGT=ne
 KM_TGT=km
+PS_TGT=ps
 
 ROOT=$(dirname "$0")
 DATA=$ROOT/data
@@ -21,12 +22,14 @@ NE_ROOT=$DATA/all-clean-ne
 SI_ROOT=$DATA/all-clean-si
 HI_ROOT=$DATA/all-clean-hi
 KM_ROOT=$DATA/all-clean-km
+PS_ROOT=$DATA/all-clean-ps
 
 mkdir -p $DATA \
 $NE_ROOT \
 $SI_ROOT \
 $HI_ROOT \
-$KM_ROOT
+$KM_ROOT \
+$PS_ROOT
 
 SI_OPUS_DATASETS=(
   "$SI_ROOT/GNOME.en-si"
@@ -70,6 +73,21 @@ KM_OPUS_URLS=(
   "https://object.pouta.csc.fi/OPUS-Tatoeba/v20190709/moses/en-km.txt.zip"
 )
 
+#TODO: Check QED too
+PS_OPUS_DATASETS=(
+  "$PS_ROOT/GNOME.en-ps"
+  "$PS_ROOT/Ubuntu.en-ps"
+  "$PS_ROOT/KDE4.en-ps"
+  "$PS_ROOT/Tatoeba.en-ps"  
+)
+
+PS_OPUS_URLS=(
+  "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-ps.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-ps.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-ps.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-Tatoeba/v20190709/moses/en-ps.txt.zip"
+)
+
 REMOVE_FILE_PATHS=()
 
 # Download data
@@ -103,9 +121,12 @@ download_opus_data() {
   elif [ "$TGT" = "ne" ]; then
     URLS=("${NE_OPUS_URLS[@]}")
     DATASETS=("${NE_OPUS_DATASETS[@]}")
-  else
+  elif [ "$TGT" = "km" ]; then
     URLS=("${KM_OPUS_URLS[@]}")
     DATASETS=("${KM_OPUS_DATASETS[@]}")
+  else
+    URLS=("${PS_OPUS_URLS[@]}")
+    DATASETS=("${PS_OPUS_DATASETS[@]}")
   fi
 
   # Download and extract data
@@ -132,6 +153,7 @@ REMOVE_FILE_PATHS+=( ${SI_OPUS_DATASETS[3]}.$SRC ${SI_OPUS_DATASETS[3]}.$SI_TGT 
 
 download_opus_data $NE_ROOT $NE_TGT
 download_opus_data $KM_ROOT $KM_TGT
+download_opus_data $PS_ROOT $PS_TGT
 
 
 # Download and extract Global Voices data
