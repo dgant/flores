@@ -20,7 +20,6 @@ TMP=$DATA/wiki_${SRC}_${TGT}_bpe${BPESIZE}
 DATABIN=$ROOT/data-bin/wiki_${SRC}_${TGT}_bpe${BPESIZE}
 mkdir -p $TMP $DATABIN
 
-#SRC_TOKENIZER="bash $SCRIPTS/indic_norm_tok.sh $SRC"
 SRC_TOKENIZER="cat"
 TGT_TOKENIZER="cat"  # learn target-side BPE over untokenized (raw) text
 SPM_TRAIN=$SCRIPTS/spm_train.py
