@@ -73,12 +73,12 @@ KM_OPUS_URLS=(
   "https://object.pouta.csc.fi/OPUS-Tatoeba/v20190709/moses/en-km.txt.zip"
 )
 
-#TODO: Check QED too
 PS_OPUS_DATASETS=(
   "$PS_ROOT/GNOME.en-ps"
   "$PS_ROOT/Ubuntu.en-ps"
   "$PS_ROOT/KDE4.en-ps"
   "$PS_ROOT/Tatoeba.en-ps"  
+  "$PS_ROOT/Wikimedia.en-ps"
 )
 
 PS_OPUS_URLS=(
@@ -86,6 +86,7 @@ PS_OPUS_URLS=(
   "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-ps.txt.zip"
   "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-ps.txt.zip"
   "https://object.pouta.csc.fi/OPUS-Tatoeba/v20190709/moses/en-ps.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-wikimedia/v20190628/moses/en-ps.txt.zip"
 )
 
 REMOVE_FILE_PATHS=()
