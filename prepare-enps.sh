@@ -37,8 +37,8 @@ TRAIN_SETS=(
     "all-clean-ps/GNOMEKDEUbuntu.en-ps"
 )
 #TODO: Store these inside the repo
-VALID_SET="../../flores_v2/ps-en.dev"
-TEST_SET="../../flores_v2/ps-en.devtest"
+VALID_SET="../../flores-data-v2/ps-en.dev"
+TEST_SET="../../flores-data-v2/ps-en.devtest"
 
 if [ ! -d $DATA/all-clean-ps ]; then
     echo "Data directory not found. Please run 'bash download-data.sh' first..."
