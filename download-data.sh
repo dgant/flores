@@ -15,6 +15,7 @@ SI_TGT=si
 NE_TGT=ne
 KM_TGT=km
 PS_TGT=ps
+FA_TGT=fa
 
 ROOT=$(dirname "$0")
 DATA=$ROOT/data
@@ -23,13 +24,15 @@ SI_ROOT=$DATA/all-clean-si
 HI_ROOT=$DATA/all-clean-hi
 KM_ROOT=$DATA/all-clean-km
 PS_ROOT=$DATA/all-clean-ps
+FA_ROOT=$DATA/all-clean-fa
 
 mkdir -p $DATA \
 $NE_ROOT \
 $SI_ROOT \
 $HI_ROOT \
 $KM_ROOT \
-$PS_ROOT
+$PS_ROOT \
+$FA_ROOT
 
 SI_OPUS_DATASETS=(
   "$SI_ROOT/GNOME.en-si"
@@ -89,6 +92,60 @@ PS_OPUS_URLS=(
   "https://object.pouta.csc.fi/OPUS-wikimedia/v20190628/moses/en-ps.txt.zip"
 )
 
+FA_OPUS_DATASETS=(
+  "$FA_ROOT/OpenSubtitles.en-fa"
+  "$FA_ROOT/Tanzil.en-fa"
+  "$FA_ROOT/TEP.en-fa"
+  "$FA_ROOT/QED.en-fa"
+  "$FA_ROOT/Wikipedia.en-fa"
+  "$FA_ROOT/GNOME.en-fa"
+  "$FA_ROOT/TED2013.en-fa"
+  "$FA_ROOT/infopankki.en-fa"
+  "$FA_ROOT/KDE4.en-fa"
+  "$FA_ROOT/Ubuntu.en-fa"
+  "$FA_ROOT/GlobalVoices.en-fa"
+)
+
+FA_OPUS_URLS=(
+  "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2018/moses/en-fa.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-Tanzil/v1/moses/en-fa.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-TEP/v1/moses/en-fa.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-QED/v2.0a/moses/en-fa.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-Wikipedia/v1.0/moses/en-fa.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-fa.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-TED2013/v1.1/moses/en-fa.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-infopankki/v1/moses/en-fa.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-fa.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-fa.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-GlobalVoices/v2017q3/moses/en-fa.txt.zip"
+)
+
+HI_OPUS_DATASETS=(
+  "$HI_ROOT/Tanzil.en-hi"
+  "$HI_ROOT/Tatoeba.en-hi"
+  "$HI_ROOT/GNOME.en-hi"
+  "$HI_ROOT/QED.en-hi"
+  "$HI_ROOT/bible-uedin.en-hi"
+  "$HI_ROOT/OpenSubtitles.en-hi"
+  "$HI_ROOT/KDE4.en-hi"
+  "$HI_ROOT/Ubuntu.en-hi"
+  "$HI_ROOT/WMT-News.en-hi"
+  "$HI_ROOT/GlobalVoices.en-hi"
+)
+
+HI_OPUS_URLs=(
+  "https://object.pouta.csc.fi/OPUS-Tanzil/v1/moses/en-hi.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-Tatoeba/v20190709/moses/en-hi.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-GNOME/v1/moses/en-hi.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-QED/v2.0a/moses/en-hi.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-bible-uedin/v1/moses/en-hi.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2018/moses/en-hi.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-KDE4/v2/moses/en-hi.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-Ubuntu/v14.10/moses/en-hi.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-WMT-News/v2019/moses/en-hi.txt.zip"
+  "https://object.pouta.csc.fi/OPUS-GlobalVoices/v2017q3/moses/en-hi.txt.zip"
+)
+
 REMOVE_FILE_PATHS=()
 
 # Download data
@@ -115,7 +172,6 @@ download_data() {
 download_opus_data() {
   LANG_ROOT=$1
   TGT=$2
-
   if [ "$TGT" = "si" ]; then
     URLS=("${SI_OPUS_URLS[@]}")
     DATASETS=("${SI_OPUS_DATASETS[@]}")
@@ -125,26 +181,25 @@ download_opus_data() {
   elif [ "$TGT" = "km" ]; then
     URLS=("${KM_OPUS_URLS[@]}")
     DATASETS=("${KM_OPUS_DATASETS[@]}")
-  else
+  elif [ "$TGT" = "ps" ]; then
     URLS=("${PS_OPUS_URLS[@]}")
     DATASETS=("${PS_OPUS_DATASETS[@]}")
+  elif [ "$TGT" = "fa" ]; then
+    URLS=("${FA_OPUS_URLS[@]}")
+    DATASETS=("${FA_OPUS_DATASETS[@]}")
+  else #[ "$TGT" = "hi" ]; then
+    URLS=("${HI_OPUS_URLS[@]}")
+    DATASETS=("${HI_OPUS_DATASETS[@]}")
   fi
 
   # Download and extract data
   for ((i=0;i<${#URLS[@]};++i)); do
     URL=${URLS[i]}
     CORPORA=${DATASETS[i]}
-
     download_data $CORPORA $URL
     unzip -o $CORPORA -d $LANG_ROOT
     REMOVE_FILE_PATHS+=( $CORPORA $CORPORA.xml $CORPORA.ids $LANG_ROOT/README $LANG_ROOT/LICENSE )
   done
-
-  cat ${DATASETS[0]}.$SRC ${DATASETS[1]}.$SRC ${DATASETS[2]}.$SRC > $LANG_ROOT/GNOMEKDEUbuntu.$SRC-$TGT.$SRC
-  cat ${DATASETS[0]}.$TGT ${DATASETS[1]}.$TGT ${DATASETS[2]}.$TGT > $LANG_ROOT/GNOMEKDEUbuntu.$SRC-$TGT.$TGT
-
-  REMOVE_FILE_PATHS+=( ${DATASETS[0]}.$SRC ${DATASETS[1]}.$SRC ${DATASETS[2]}.$SRC )
-  REMOVE_FILE_PATHS+=( ${DATASETS[0]}.$TGT ${DATASETS[1]}.$TGT ${DATASETS[2]}.$TGT )
 }
 
 download_opus_data $SI_ROOT $SI_TGT
@@ -155,7 +210,8 @@ REMOVE_FILE_PATHS+=( ${SI_OPUS_DATASETS[3]}.$SRC ${SI_OPUS_DATASETS[3]}.$SI_TGT 
 download_opus_data $NE_ROOT $NE_TGT
 download_opus_data $KM_ROOT $KM_TGT
 download_opus_data $PS_ROOT $PS_TGT
-
+download_opus_data $FA_ROOT $FA_TGT
+#download_opus_data $HI_ROOT $HI_TGT
 
 # Download and extract Global Voices data
 GLOBAL_VOICES="$NE_ROOT/globalvoices.2018q4.ne-en"
@@ -202,7 +258,7 @@ REMOVE_FILE_PATHS+=( bible-corpus-1.2.1 bible.tar.gz $BIBLE_TOOLS $XML_BIBLES $X
 
 # Download parallel en-hi corpus
 download_data $DATA/en-hi.tgz "http://www.cfilt.iitb.ac.in/iitb_parallel/iitb_corpus_download/parallel.tgz"
-#download_data $DATA/en-hi.tgz "https://www.cse.iitb.ac.in/~anoopk/share/iitb_en_hi_parallel/iitb_corpus_download/parallel.tgz"
+download_data $DATA/en-hi.tgz "https://www.cse.iitb.ac.in/~anoopk/share/iitb_en_hi_parallel/iitb_corpus_download/parallel.tgz"
 tar xvzf $DATA/en-hi.tgz
 cp parallel/* $HI_ROOT/
 REMOVE_FILE_PATHS+=( parallel $DATA/en-hi.tgz )
