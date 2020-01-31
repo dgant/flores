@@ -24,19 +24,31 @@ SRC_TOKENIZER="cat"
 TGT_TOKENIZER="cat"  # learn target-side BPE over untokenized (raw) text
 SPM_TRAIN=$SCRIPTS/spm_train.py
 SPM_ENCODE=$SCRIPTS/spm_encode.py
-PREPROCESS_INDIC=false
-DOWNLOAD_WIKIPEDIA=false
 
-URLS=(
-    "https://github.com/facebookresearch/flores/raw/master/data/wikipedia_en_ne_si_test_sets.tgz"
+TRAIN_SETS_PS=(
+  "all-clean-ps/GNOME.en-ps"
+  "all-clean-ps/KDE4.en-ps"
+  "all-clean-ps/Tatoeba.en-ps"
+  "all-clean-ps/Ubuntu.en-ps"
+  "all-clean-ps/wikimedia.en-ps"
 )
-ARCHIVES=(
-    "wikipedia_en_ps_si_test_sets.tgz"
+TRAIN_SETS_HI=(
+  "all-clean-hi/IITB.en-hi"
 )
-TRAIN_SETS=(
-    "all-clean-ps/GNOMEKDEUbuntu.en-ps"
+TRAIN_SETS_FA=(
+  "all-clean-fa/GlobalVoices.en-fa"
+  "all-clean-fa/GNOME.en-fa"
+  "all-clean-fa/infopankki.en-fa"
+  "all-clean-fa/KDE4.en-fa"
+  "all-clean-fa/OpenSubtitles.en-fa"
+  "all-clean-fa/QED.en-fa"
+  "all-clean-fa/Tanzil.en-fa"
+  "all-clean-fa/TED2013.en-fa"
+  "all-clean-fa/TEP.en-fa"
+  "all-clean-fa/Ubuntu.en-fa"
+  "all-clean-fa/Wikipedia.en-fa"
 )
-#TODO: Store these inside the repo
+
 VALID_SET="../../flores-data-v2/ps-en.dev"
 TEST_SET="../../flores-data-v2/ps-en.devtest"
 
@@ -45,44 +57,18 @@ if [ ! -d $DATA/all-clean-ps ]; then
     exit -1
 fi
 
-# download and extract data
-if [ "$DOWNLOAD_WIKIPEDIA" = true ]; then
-  for ((i=0;i<${#URLS[@]};++i)); do
-      ARCHIVE=$DATA/${ARCHIVES[i]}
-      if [ -f $ARCHIVE ]; then
-          echo "$ARCHIVE already exists, skipping download"
-      else
-          URL=${URLS[i]}
-          wget -P $DATA "$URL"
-          if [ -f $ARCHIVE ]; then
-              echo "$URL successfully downloaded."
-          else
-              echo "$URL not successfully downloaded."
-              exit -1
-          fi
-      fi
-      FILE=${ARCHIVE: -4}
-      if [ -e $FILE ]; then
-          echo "$FILE already exists, skipping extraction"
-      else
-          tar -C $DATA -xzvf $ARCHIVE
-      fi
-  done
-else
-  #$DATA/wikipedia_en_ps_si_test_sets
-  echo ""
-fi
-
-echo "pre-processing train data..."
-if [ "$PREPROCESS_INDIC" = true ]; then
-  bash $SCRIPTS/download_indic.sh
-fi
-for FILE in "${TRAIN_SETS[@]}" ; do
-    $SRC_TOKENIZER $DATA/$FILE.$SRC
-done > $TMP/train.$SRC
-for FILE in "${TRAIN_SETS[@]}"; do
-    $TGT_TOKENIZER $DATA/$FILE.$TGT
-done > $TMP/train.$TGT
+for FILE in "${TRAIN_SETS_PS[@]}" ; do
+    $SRC_TOKENIZER $DATA/$FILE.ps
+done > $TMP/train.ps
+for FILE in "${TRAIN_SETS_HI[@]}" ; do
+    $SRC_TOKENIZER $DATA/$FILE.hi
+done > $TMP/train.hi
+for FILE in "${TRAIN_SETS_FA[@]}" ; do
+    $SRC_TOKENIZER $DATA/$FILE.fa
+done > $TMP/train.fa
+for FILE in "${TRAIN_SETS_PS[@]}"; do
+    $TGT_TOKENIZER $DATA/$FILE.en
+done > $TMP/train.en
 
 echo "pre-processing dev/test data..."
 $SRC_TOKENIZER $DATA/${VALID_SET}.$SRC > $TMP/valid.$SRC
@@ -90,9 +76,16 @@ $TGT_TOKENIZER $DATA/${VALID_SET}.$TGT > $TMP/valid.$TGT
 $SRC_TOKENIZER $DATA/${TEST_SET}.$SRC > $TMP/test.$SRC
 $TGT_TOKENIZER $DATA/${TEST_SET}.$TGT > $TMP/test.$TGT
 
+cat $TMP/train.ps | head -100000 > $TMP/train-abridged.ps
+cat $TMP/train.fa | head -100000 > $TMP/train-abridged.fa
+cat $TMP/train.hi | head -100000 > $TMP/train-abridged.hi
+cat $TMP/train.en | head -100000 > $TMP/train-abridged.en
+
+# Take a limited amount of each train set for BPE, so all languages are similarly well-represented
+
 # learn BPE with sentencepiece
 python $SPM_TRAIN \
-  --input=$TMP/train.$SRC,$TMP/train.$TGT \
+  --input=$TMP/train-abridged.ps,$TMP/train-abridged.fa,$TMP/train-abridged.hi,$TMP/train-abridged.en \
   --model_prefix=$DATABIN/sentencepiece.bpe \
   --vocab_size=$BPESIZE \
   --character_coverage=1.0 \
@@ -102,8 +95,8 @@ python $SPM_TRAIN \
 python $SPM_ENCODE \
   --model $DATABIN/sentencepiece.bpe.model \
   --output_format=piece \
-  --inputs $TMP/train.$SRC $TMP/train.$TGT \
-  --outputs $TMP/train.bpe.$SRC $TMP/train.bpe.$TGT \
+  --inputs $TMP/train.ps $TMP/train.fa $TMP/train.hi $TMP/train.en \
+  --outputs $TMP/train.bpe.ps $TMP/train.bpe.fa $TMP/train.bpe.hi $TMP/train.bpe.en \
   --min-len $TRAIN_MINLEN --max-len $TRAIN_MAXLEN
 for SPLIT in "valid" "test"; do \
   python $SPM_ENCODE \
