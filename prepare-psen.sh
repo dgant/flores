@@ -6,22 +6,19 @@
 #
 #!/bin/bash
 
-SRC=ps
+SRC="ps"
+SRCS="ps fa hi km"
 TGT=en
 
-BPESIZE=5000
+BPESIZE=15000
 TRAIN_MINLEN=1  # remove sentences with <1 BPE token
 TRAIN_MAXLEN=250  # remove sentences with >250 BPE tokens 
 
 ROOT=$(dirname "$0")
 SCRIPTS=$ROOT/scripts
 DATA=$ROOT/data
-TMP=$DATA/wiki_${SRC}_${TGT}_bpe${BPESIZE}
-DATABIN=$ROOT/data-bin/wiki_${SRC}_${TGT}_bpe${BPESIZE}
-mkdir -p $TMP $DATABIN
+mkdir -p $DATA 
 
-SRC_TOKENIZER="cat"
-TGT_TOKENIZER="cat"  # learn target-side BPE over untokenized (raw) text
 SPM_TRAIN=$SCRIPTS/spm_train.py
 SPM_ENCODE=$SCRIPTS/spm_encode.py
 
@@ -32,10 +29,8 @@ TRAIN_SETS_PS=(
   "all-clean-ps/Ubuntu.en-ps"
   "all-clean-ps/wikimedia.en-ps"
 )
-TRAIN_SETS_HI=(
-  "all-clean-hi/IITB.en-hi"
-)
-TRAIN_SETS_FA=(
+TRAIN_SETS_HI=("all-clean-hi/IITB.en-hi")
+DATA_SETS_FA=(
   "all-clean-fa/GlobalVoices.en-fa"
   "all-clean-fa/GNOME.en-fa"
   "all-clean-fa/infopankki.en-fa"
@@ -48,71 +43,96 @@ TRAIN_SETS_FA=(
   "all-clean-fa/Ubuntu.en-fa"
   "all-clean-fa/Wikipedia.en-fa"
 )
-
-VALID_SET="../../flores-data-v2/ps-en.dev"
-TEST_SET="../../flores-data-v2/ps-en.devtest"
-
-if [ ! -d $DATA/all-clean-ps ]; then
-    echo "Data directory not found. Please run 'bash download-data.sh' first..."
-    exit -1
-fi
-
-for FILE in "${TRAIN_SETS_PS[@]}" ; do
-    $SRC_TOKENIZER $DATA/$FILE.ps
-done > $TMP/train.ps
-for FILE in "${TRAIN_SETS_HI[@]}" ; do
-    $SRC_TOKENIZER $DATA/$FILE.hi
-done > $TMP/train.hi
-for FILE in "${TRAIN_SETS_FA[@]}" ; do
-    $SRC_TOKENIZER $DATA/$FILE.fa
-done > $TMP/train.fa
-for FILE in "${TRAIN_SETS_PS[@]}"; do
-    $TGT_TOKENIZER $DATA/$FILE.en
-done > $TMP/train.en
-
-echo "pre-processing dev/test data..."
-$SRC_TOKENIZER $DATA/${VALID_SET}.$SRC > $TMP/valid.$SRC
-$TGT_TOKENIZER $DATA/${VALID_SET}.$TGT > $TMP/valid.$TGT
-$SRC_TOKENIZER $DATA/${TEST_SET}.$SRC > $TMP/test.$SRC
-$TGT_TOKENIZER $DATA/${TEST_SET}.$TGT > $TMP/test.$TGT
-
-cat $TMP/train.ps | head -100000 > $TMP/train-abridged.ps
-cat $TMP/train.fa | head -100000 > $TMP/train-abridged.fa
-cat $TMP/train.hi | head -100000 > $TMP/train-abridged.hi
-cat $TMP/train.en | head -100000 > $TMP/train-abridged.en
-
-# Take a limited amount of each train set for BPE, so all languages are similarly well-represented
-
-# learn BPE with sentencepiece
+TRAIN_SETS_KM=(
+  "all-clean-km/GlobalVoices.en-km"
+  "all-clean-km/GNOME.en-km"
+  "all-clean-km/KDE4.en-km"
+  "all-clean-km/Tatoeba.en-km"
+  "all-clean-km/Ubuntu.en-km"
+)
+echo "Aggregating splits"
+for FILE in "${TRAIN_SETS_PS[@]}" ; do cat "${DATA}/$FILE.ps"; done > $DATA/train.ps-en.ps
+for FILE in "${TRAIN_SETS_PS[@]}" ; do cat "${DATA}/$FILE.en"; done > $DATA/train.ps-en.en
+for FILE in "${TRAIN_SETS_HI[@]}" ; do cat "${DATA}/$FILE.hi"; done > $DATA/train.hi-en.hi
+for FILE in "${TRAIN_SETS_HI[@]}" ; do cat "${DATA}/$FILE.en"; done > $DATA/train.hi-en.en
+for FILE in "${TRAIN_SETS_KM[@]}" ; do cat "${DATA}/$FILE.km"; done > $DATA/train.km-en.km
+for FILE in "${TRAIN_SETS_KM[@]}" ; do cat "${DATA}/$FILE.en"; done > $DATA/train.km-en.en
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.fa"; done | awk 'NR % 1500 >  1' > $DATA/train.fa-en.fa
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.en"; done | awk 'NR % 1500 >  1' > $DATA/train.fa-en.en
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.fa"; done | awk 'NR % 1500 == 0' > $DATA/valid.fa-en.fa
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.en"; done | awk 'NR % 1500 == 0' > $DATA/valid.fa-en.en
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.fa"; done | awk 'NR % 1500 == 1' > $DATA/test.fa-en.fa
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.en"; done | awk 'NR % 1500 == 1' > $DATA/test.fa-en.en
+cat "/private/home/danielgant/flores-data-v2/ps-en.dev.ps"     > $DATA/valid.ps-en.ps
+cat "/private/home/danielgant/flores-data-v2/ps-en.dev.en"     > $DATA/valid.ps-en.en
+cat "/private/home/danielgant/flores-data-v2/ps-en.devtest.ps" > $DATA/test.ps-en.ps
+cat "/private/home/danielgant/flores-data-v2/ps-en.devtest.en" > $DATA/test.ps-en.en
+cat "/private/home/danielgant/flores-data-v2/km-en.dev.km"     > $DATA/valid.km-en.km
+cat "/private/home/danielgant/flores-data-v2/km-en.dev.en"     > $DATA/valid.km-en.en
+cat "/private/home/danielgant/flores-data-v2/km-en.devtest.km" > $DATA/test.km-en.km
+cat "/private/home/danielgant/flores-data-v2/km-en.devtest.en" > $DATA/test.km-en.en
+cat "/private/home/pipibjc/data/iitb/dev_test/dev.hi"          > $DATA/valid.hi-en.hi
+cat "/private/home/pipibjc/data/iitb/dev_test/dev.en"          > $DATA/valid.hi-en.en
+cat "/private/home/pipibjc/data/iitb/dev_test/test.hi"         > $DATA/test.hi-en.hi
+cat "/private/home/pipibjc/data/iitb/dev_test/test.en"         > $DATA/test.hi-en.en
+echo "Taking a limited amount of each train set for BPE, so all languages are similarly well-represented"
+cat $DATA/train.ps-en.ps | head -100000 >  $DATA/abridged.ps
+cat $DATA/train.fa-en.fa | head -100000 >  $DATA/abridged.fa
+cat $DATA/train.hi-en.hi | head -100000 >  $DATA/abridged.hi
+cat $DATA/train.km-en.km | head -100000 >  $DATA/abridged.km
+cat $DATA/train.ps-en.en | head -100000 >  $DATA/abridged.en
+cat $DATA/train.fa-en.en | head -100000 >> $DATA/abridged.en
+cat $DATA/train.hi-en.en | head -100000 >> $DATA/abridged.en
+echo "Concatenating target data"
+cat $DATA/train.ps-en.en                >  $DATA/train-concatenated.en
+cat $DATA/train.fa-en.en                >> $DATA/train-concatenated.en
+cat $DATA/train.hi-en.en                >> $DATA/train-concatenated.en
+cat $DATA/train.km-en.en                >> $DATA/train-concatenated.en
+cat $DATA/valid.ps-en.en                >  $DATA/valid-concatenated.en
+cat $DATA/valid.fa-en.en                >> $DATA/valid-concatenated.en
+cat $DATA/valid.hi-en.en                >> $DATA/valid-concatenated.en
+cat $DATA/valid.km-en.en                >> $DATA/valid-concatenated.en
+cat $DATA/test.ps-en.en                 >  $DATA/test-concatenated.en
+cat $DATA/test.fa-en.en                 >> $DATA/test-concatenated.en
+cat $DATA/test.hi-en.en                 >> $DATA/test-concatenated.en
+cat $DATA/test.km-en.en                 >> $DATA/test-concatenated.en
+echo "Learning BPE with sentencepiece"
 python $SPM_TRAIN \
-  --input=$TMP/train-abridged.ps,$TMP/train-abridged.fa,$TMP/train-abridged.hi,$TMP/train-abridged.en \
-  --model_prefix=$DATABIN/sentencepiece.bpe \
+  --input=$DATA/abridged.ps,$DATA/abridged.fa,$DATA/abridged.hi,$DATA/abridged.km,$DATA/abridged.en \
+  --model_prefix=$DATA/sentencepiece.bpe \
   --vocab_size=$BPESIZE \
   --character_coverage=1.0 \
   --model_type=bpe
-
-# encode train/valid/test
-python $SPM_ENCODE \
-  --model $DATABIN/sentencepiece.bpe.model \
-  --output_format=piece \
-  --inputs $TMP/train.ps $TMP/train.fa $TMP/train.hi $TMP/train.en \
-  --outputs $TMP/train.bpe.ps $TMP/train.bpe.fa $TMP/train.bpe.hi $TMP/train.bpe.en \
-  --min-len $TRAIN_MINLEN --max-len $TRAIN_MAXLEN
-for SPLIT in "valid" "test"; do \
+echo "Encoding"
+for SOMESRC in $SRCS; do
   python $SPM_ENCODE \
-    --model $DATABIN/sentencepiece.bpe.model \
+    --model $DATA/sentencepiece.bpe.model \
     --output_format=piece \
-    --inputs $TMP/$SPLIT.$SRC $TMP/$SPLIT.$TGT \
-    --outputs $TMP/$SPLIT.bpe.$SRC $TMP/$SPLIT.bpe.$TGT
+    --inputs $DATA/train.$SOMESRC-en.$SOMESRC $DATA/train.$SOMESRC-en.en \
+    --outputs $DATA/train.bpe.$SOMESRC-en.$SOMESRC $DATA/train.bpe.$SOMESRC-en.en \
+    --min-len $TRAIN_MINLEN --max-len $TRAIN_MAXLEN
+  for SPLIT in "valid" "test"; do
+    python $SPM_ENCODE \
+      --model $DATA/sentencepiece.bpe.model \
+      --output_format=piece \
+      --inputs $DATA/$SPLIT.$SOMESRC-en.$SOMESRC $DATA/$SPLIT.$SOMESRC-en.en \
+      --outputs $DATA/$SPLIT.bpe.$SOMESRC-en.$SOMESRC $DATA/$SPLIT.bpe.$SOMESRC-en.en
+  done
 done
-
-# binarize data
-fairseq-preprocess \
-  --source-lang $SRC --target-lang $TGT \
-  --destdir $DATABIN \
-  --joined-dictionary \
-  --workers 4 \
-  --trainpref $TMP/train.bpe \
-  --validpref $TMP/valid.bpe \
-   --testpref $TMP/test.bpe
-  
+echo "Converting sentencepiece vocabulary into fairseq dictionary"
+tail -n +4 $DATA/sentencepiece.bpe.vocab | awk -F'\t' 'BEGIN{OFS=" "} {print $1, 100}' > $DATA/vocab
+echo "Preprocessing"
+for SOMESRC in $SRCS; do
+  echo "Binarizing ${SOMESRC}"
+  fairseq-preprocess \
+    --source-lang $SOMESRC --target-lang en \
+    --destdir $DATA \
+    --joined-dictionary \
+    --workers 4 \
+    --trainpref $DATA/train.bpe.$SOMESRC-en \
+    --validpref $DATA/valid.bpe.$SOMESRC-en \
+    --testpref  $DATA/test.bpe.$SOMESRC-en \
+    --srcdict $DATA/vocab
+  mv "${DATA}/dict.en.txt" "${DATA}/dict.en.txt-moved"
+done
+mv "${DATA}/dict.en.txt-moved" "${DATA}/dict.en.txt"
