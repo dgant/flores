@@ -56,29 +56,24 @@ def validate_alignment(input_src: str, input_tgt: str, output_src: str, output_t
   input_tgt_file = open(input_tgt, 'r')
   output_src_file = open(output_src, 'r')
   output_tgt_file = open(output_tgt, 'r')
-  # Validate alignment for a random batch of lines from the output corpora
-  max_skip = int(math.sqrt(output_src_file_length))
-  line_now = 0
-  line_next = 0
+  input_line_now = -1
+  output_line_now = 0
+  output_line_next = 0
   for output_line_src, output_line_tgt in zip(output_src_file, output_tgt_file):
-    if line_now == line_next:      
-      line_next = line_now + random.randint(1, max_skip)
-      while True:
-        input_line_src = input_src_file.readline()
-        input_line_tgt = input_tgt_file.readline()
-        if len(input_line_src) == 0 or len(input_line_tgt) == 0:
-          raise Exception(f"Didn't find line in input corpus matching:\nSource:\n{output_line_src}\nTarget:\n{output_line_tgt}")
-        matched_src = input_line_src == output_line_src
-        matched_tgt = input_line_tgt == output_line_tgt
-        if matched_src and matched_tgt:
-          print(f"Found correct alignment for ({input_line_src[0:16].rstrip()}..., {input_line_tgt[0:16].rstrip()}...)")
-          break
-        if matched_src or matched_tgt:
-          raise Exception(f"Found misalignment.\nInput source:\n{input_line_src}\nInput target:\n{input_line_tgt}\nOutput source:\n{output_line_src}\nOutput target:\n{output_line_tgt}")
-        
-    line_now += 1
-  #for input_line_src, input_line_tgt, output_line_src, output_line_tgt in zip(open(input_src), open(input_tgt), open(output_src), open(output_tgt)):
-  
+    while True:
+      input_line_src = input_src_file.readline()
+      input_line_tgt = input_tgt_file.readline()
+      input_line_now += 1
+      if len(input_line_src) == 0 or len(input_line_tgt) == 0:
+        raise Exception(f"Didn't find line in input corpus matching:\nSource:\n{output_line_src}\nTarget:\n{output_line_tgt}")
+      matched_src = input_line_src == output_line_src
+      matched_tgt = input_line_tgt == output_line_tgt
+      if matched_src and matched_tgt:
+        print(f"Found correct alignment for output line {output_line_now} on input line {input_line_now}: ({input_line_src[0:16].rstrip()}..., {input_line_tgt[0:16].rstrip()}...)")
+        break
+      if matched_src or matched_tgt:
+        raise Exception(f"Found misalignment.\nInput source:\n{input_line_src}\nInput target:\n{input_line_tgt}\nOutput source:\n{output_line_src}\nOutput target:\n{output_line_tgt}")        
+    output_line_now += 1
   
 def main():
   parser = argparse.ArgumentParser()
