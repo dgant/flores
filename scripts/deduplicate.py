@@ -1,5 +1,4 @@
 import argparse
-import math
 import random
 import typing
 from io import TextIOWrapper
@@ -10,7 +9,7 @@ def main():
   parser.add_argument('--input-tgt', required=True, help='Path to target language input file')
   parser.add_argument('--output-src', required=True, help='Path to source language output file')
   parser.add_argument('--output-tgt', required=True, help='Path to target language output file')
-  parser.add_argument('--validate-alignment', action='store_true', help='Spot-check alignment of parallel corpora after processing')
+  parser.add_argument('--validate-alignment', action='store_true', help='Validate alignment of parallel corpora after processing')
   args = parser.parse_args()
   deduplicate(args.input_src, args.input_tgt, args.output_src, args.output_tgt)
   if (args.validate_alignment):
