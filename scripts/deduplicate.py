@@ -4,6 +4,28 @@ import random
 import typing
 from io import TextIOWrapper
 
+def main():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--input-src', required=True, help='Path to source language input file')
+  parser.add_argument('--input-tgt', required=True, help='Path to target language input file')
+  parser.add_argument('--output-src', required=True, help='Path to source language output file')
+  parser.add_argument('--output-tgt', required=True, help='Path to target language output file')
+  parser.add_argument('--validate-alignment', action='store_true', help='Spot-check alignment of parallel corpora after processing')
+  args = parser.parse_args()
+  deduplicate(args.input_src, args.input_tgt, args.output_src, args.output_tgt)
+  if (args.validate_alignment):
+    validate_alignment(args.input_src, args.input_tgt, args.output_src, args.output_tgt)
+
+def deduplicate(input_src: str, input_tgt: str, output_src: str, output_tgt: str) -> None:
+  """
+  Deduplicates a parallel corpus.
+  """
+  input_src_file = open(input_src, 'r')
+  input_tgt_file = open(input_tgt, 'r')
+  output_src_file = open(output_src, 'w')
+  output_tgt_file = open(output_tgt, 'w')  
+  deduplicate_streams(input_src_file, input_tgt=input_tgt_file, output_src=output_src_file, output_tgt=output_tgt_file)
+      
 def deduplicate_streams(input_src: TextIOWrapper, input_tgt: TextIOWrapper, output_src: TextIOWrapper, output_tgt: TextIOWrapper) -> None:
   """
   Deduplicates a parallel corpus.
@@ -29,20 +51,10 @@ def deduplicate_streams(input_src: TextIOWrapper, input_tgt: TextIOWrapper, outp
       print(line_src, file=output_src)
       print(line_tgt, file=output_tgt)
 
-def deduplicate(input_src: str, input_tgt: str, output_src: str, output_tgt: str) -> None:
-  """
-  Deduplicates a parallel corpus.
-  """
-  input_src_file = open(input_src, 'r')
-  input_tgt_file = open(input_tgt, 'r')
-  output_src_file = open(output_src, 'w')
-  output_tgt_file = open(output_tgt, 'w')  
-  deduplicate_streams(input_src_file, input_tgt=input_tgt_file, output_src=output_src_file, output_tgt=output_tgt_file)
-
-def count_lines(stream):
+def count_lines(stream: TextIOWrapper) -> int:
   return sum(1 for line in stream)
   
-def validate_alignment(input_src: str, input_tgt: str, output_src: str, output_tgt: str):
+def validate_alignment(input_src: str, input_tgt: str, output_src: str, output_tgt: str) -> None:
   """
   Spot-checks original and deduplicated corpora to verify that text alignment was preserved during deduplication.
   """
@@ -74,18 +86,6 @@ def validate_alignment(input_src: str, input_tgt: str, output_src: str, output_t
       if matched_src or matched_tgt:
         raise Exception(f"Found misalignment.\nInput source:\n{input_line_src}\nInput target:\n{input_line_tgt}\nOutput source:\n{output_line_src}\nOutput target:\n{output_line_tgt}")        
     output_line_now += 1
-  
-def main():
-  parser = argparse.ArgumentParser()
-  parser.add_argument('--input-src', required=True, help='Path to source language input file')
-  parser.add_argument('--input-tgt', required=True, help='Path to target language input file')
-  parser.add_argument('--output-src', required=True, help='Path to source language output file')
-  parser.add_argument('--output-tgt', required=True, help='Path to target language output file')
-  parser.add_argument('--validate-alignment', action='store_true', help='Spot-check alignment of parallel corpora after processing')
-  args = parser.parse_args()
-  deduplicate(args.input_src, args.input_tgt, args.output_src, args.output_tgt)
-  if (args.validate_alignment):
-    validate_alignment(args.input_src, args.input_tgt, args.output_src, args.output_tgt)
 
 if __name__ == '__main__':
   main()
