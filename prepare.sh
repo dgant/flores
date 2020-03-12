@@ -7,7 +7,7 @@
 #!/bin/bash
 
 SRC="ps"
-SRCS="ps fa hi km"
+SRCS="ps km hi fa"
 TGT=en
 
 BPESIZE=15000
@@ -29,6 +29,13 @@ TRAIN_SETS_PS=(
   "all-clean-ps/Ubuntu.en-ps"
   "all-clean-ps/wikimedia.en-ps"
 )
+TRAIN_SETS_KM=(
+  "all-clean-km/GlobalVoices.en-km"
+  "all-clean-km/GNOME.en-km"
+  "all-clean-km/KDE4.en-km"
+  "all-clean-km/Tatoeba.en-km"
+  "all-clean-km/Ubuntu.en-km"
+)
 TRAIN_SETS_HI=("all-clean-hi/IITB.en-hi")
 DATA_SETS_FA=(
   "all-clean-fa/GlobalVoices.en-fa"
@@ -43,26 +50,35 @@ DATA_SETS_FA=(
   "all-clean-fa/Ubuntu.en-fa"
   "all-clean-fa/Wikipedia.en-fa"
 )
-TRAIN_SETS_KM=(
-  "all-clean-km/GlobalVoices.en-km"
-  "all-clean-km/GNOME.en-km"
-  "all-clean-km/KDE4.en-km"
-  "all-clean-km/Tatoeba.en-km"
-  "all-clean-km/Ubuntu.en-km"
-)
 echo "Aggregating splits"
-for FILE in "${TRAIN_SETS_PS[@]}" ; do cat "${DATA}/$FILE.ps"; done > $DATA/train.ps-en.ps
-for FILE in "${TRAIN_SETS_PS[@]}" ; do cat "${DATA}/$FILE.en"; done > $DATA/train.ps-en.en
-for FILE in "${TRAIN_SETS_HI[@]}" ; do cat "${DATA}/$FILE.hi"; done > $DATA/train.hi-en.hi
-for FILE in "${TRAIN_SETS_HI[@]}" ; do cat "${DATA}/$FILE.en"; done > $DATA/train.hi-en.en
-for FILE in "${TRAIN_SETS_KM[@]}" ; do cat "${DATA}/$FILE.km"; done > $DATA/train.km-en.km
-for FILE in "${TRAIN_SETS_KM[@]}" ; do cat "${DATA}/$FILE.en"; done > $DATA/train.km-en.en
-for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.fa"; done | awk 'NR % 1500 >  1' > $DATA/train.fa-en.fa
-for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.en"; done | awk 'NR % 1500 >  1' > $DATA/train.fa-en.en
-for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.fa"; done | awk 'NR % 1500 == 0' > $DATA/valid.fa-en.fa
-for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.en"; done | awk 'NR % 1500 == 0' > $DATA/valid.fa-en.en
-for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.fa"; done | awk 'NR % 1500 == 1' > $DATA/test.fa-en.fa
-for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.en"; done | awk 'NR % 1500 == 1' > $DATA/test.fa-en.en
+for FILE in "${TRAIN_SETS_PS[@]}" ; do cat "${DATA}/$FILE.ps"; done > $DATA/undeduped-train.ps-en.ps
+for FILE in "${TRAIN_SETS_PS[@]}" ; do cat "${DATA}/$FILE.en"; done > $DATA/undeduped-train.ps-en.en
+for FILE in "${TRAIN_SETS_KM[@]}" ; do cat "${DATA}/$FILE.km"; done > $DATA/undeduped-train.km-en.km
+for FILE in "${TRAIN_SETS_KM[@]}" ; do cat "${DATA}/$FILE.en"; done > $DATA/undeduped-train.km-en.en
+for FILE in "${TRAIN_SETS_HI[@]}" ; do cat "${DATA}/$FILE.hi"; done > $DATA/undeduped-train.hi-en.hi
+for FILE in "${TRAIN_SETS_HI[@]}" ; do cat "${DATA}/$FILE.en"; done > $DATA/undeduped-train.hi-en.en
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.fa"; done | awk 'NR % 1500 >  1' > $DATA/undeduped-train.fa-en.fa
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.en"; done | awk 'NR % 1500 >  1' > $DATA/undeduped-train.fa-en.en
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.fa"; done | awk 'NR % 1500 == 0' > $DATA/undeduped-valid.fa-en.fa
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.en"; done | awk 'NR % 1500 == 0' > $DATA/undeduped-valid.fa-en.en
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.fa"; done | awk 'NR % 1500 == 1' > $DATA/undeduped-test.fa-en.fa
+for FILE in "${DATA_SETS_FA[@]}"  ; do cat "${DATA}/$FILE.en"; done | awk 'NR % 1500 == 1' > $DATA/undeduped-test.fa-en.en
+echo "Deduplicating splits"
+dedupe () {
+  dedupe_set=$1
+  dedupe_lang=$2
+  python3 scripts/deduplicate.py \
+  --input-src  $DATA/undeduped-$dedupe_set.$dedupe_lang-en.$dedupe_lang \
+  --input-tgt  $DATA/undeduped-$dedupe_set.$dedupe_lang-en.en \
+  --output-src $DATA/$dedupe_set.$dedupe_lang-en.$dedupe_lang \
+  --output-tgt $DATA/$dedupe_set.$dedupe_lang-en.en
+}
+dedupe "train" "ps"
+dedupe "train" "km"
+dedupe "train" "hi"
+dedupe "train" "fa"
+dedupe "valid" "fa"
+dedupe "test"  "fa"
 cat "/private/home/danielgant/flores-data-v2/ps-en.dev.ps"     > $DATA/valid.ps-en.ps
 cat "/private/home/danielgant/flores-data-v2/ps-en.dev.en"     > $DATA/valid.ps-en.en
 cat "/private/home/danielgant/flores-data-v2/ps-en.devtest.ps" > $DATA/test.ps-en.ps
@@ -75,30 +91,31 @@ cat "/private/home/pipibjc/data/iitb/dev_test/dev.hi"          > $DATA/valid.hi-
 cat "/private/home/pipibjc/data/iitb/dev_test/dev.en"          > $DATA/valid.hi-en.en
 cat "/private/home/pipibjc/data/iitb/dev_test/test.hi"         > $DATA/test.hi-en.hi
 cat "/private/home/pipibjc/data/iitb/dev_test/test.en"         > $DATA/test.hi-en.en
-echo "Taking a limited amount of each train set for BPE, so all languages are similarly well-represented"
+echo "Creating abridged train sets for BPE, so all languages are similarly well-represented"
 cat $DATA/train.ps-en.ps | head -100000 >  $DATA/abridged.ps
-cat $DATA/train.fa-en.fa | head -100000 >  $DATA/abridged.fa
-cat $DATA/train.hi-en.hi | head -100000 >  $DATA/abridged.hi
 cat $DATA/train.km-en.km | head -100000 >  $DATA/abridged.km
+cat $DATA/train.hi-en.hi | head -100000 >  $DATA/abridged.hi
+cat $DATA/train.fa-en.fa | head -100000 >  $DATA/abridged.fa
 cat $DATA/train.ps-en.en | head -100000 >  $DATA/abridged.en
-cat $DATA/train.fa-en.en | head -100000 >> $DATA/abridged.en
+cat $DATA/train.km-en.en | head -100000 >> $DATA/abridged.en
 cat $DATA/train.hi-en.en | head -100000 >> $DATA/abridged.en
+cat $DATA/train.fa-en.en | head -100000 >> $DATA/abridged.en
 echo "Concatenating target data"
-cat $DATA/train.ps-en.en                >  $DATA/train-concatenated.en
-cat $DATA/train.fa-en.en                >> $DATA/train-concatenated.en
-cat $DATA/train.hi-en.en                >> $DATA/train-concatenated.en
-cat $DATA/train.km-en.en                >> $DATA/train-concatenated.en
-cat $DATA/valid.ps-en.en                >  $DATA/valid-concatenated.en
-cat $DATA/valid.fa-en.en                >> $DATA/valid-concatenated.en
-cat $DATA/valid.hi-en.en                >> $DATA/valid-concatenated.en
-cat $DATA/valid.km-en.en                >> $DATA/valid-concatenated.en
-cat $DATA/test.ps-en.en                 >  $DATA/test-concatenated.en
-cat $DATA/test.fa-en.en                 >> $DATA/test-concatenated.en
-cat $DATA/test.hi-en.en                 >> $DATA/test-concatenated.en
-cat $DATA/test.km-en.en                 >> $DATA/test-concatenated.en
+cat $DATA/train.ps-en.en >  $DATA/train-concatenated.en
+cat $DATA/train.km-en.en >> $DATA/train-concatenated.en
+cat $DATA/train.hi-en.en >> $DATA/train-concatenated.en
+cat $DATA/train.fa-en.en >> $DATA/train-concatenated.en
+cat $DATA/valid.ps-en.en >  $DATA/valid-concatenated.en
+cat $DATA/valid.km-en.en >> $DATA/valid-concatenated.en
+cat $DATA/valid.hi-en.en >> $DATA/valid-concatenated.en
+cat $DATA/valid.fa-en.en >> $DATA/valid-concatenated.en
+cat $DATA/test.ps-en.en  >  $DATA/test-concatenated.en
+cat $DATA/test.km-en.en  >> $DATA/test-concatenated.en
+cat $DATA/test.hi-en.en  >> $DATA/test-concatenated.en
+cat $DATA/test.fa-en.en  >> $DATA/test-concatenated.en
 echo "Learning BPE with sentencepiece"
 python $SPM_TRAIN \
-  --input=$DATA/abridged.ps,$DATA/abridged.fa,$DATA/abridged.hi,$DATA/abridged.km,$DATA/abridged.en \
+  --input=$DATA/abridged.ps,$DATA/abridged.km,$DATA/abridged.hi,$DATA/abridged.fa,$DATA/abridged.en \
   --model_prefix=$DATA/sentencepiece.bpe \
   --vocab_size=$BPESIZE \
   --character_coverage=1.0 \
